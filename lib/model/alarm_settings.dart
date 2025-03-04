@@ -1,4 +1,5 @@
 import 'package:alarm/alarm.dart';
+import 'package:alarm/model/on_kill_notification_options.dart';
 import 'package:alarm/model/volume_settings.dart';
 import 'package:alarm/src/generated/platform_bindings.g.dart';
 import 'package:equatable/equatable.dart';
@@ -21,6 +22,7 @@ class AlarmSettings extends Equatable {
     this.loopAudio = true,
     this.vibrate = true,
     this.warningNotificationOnKill = true,
+    this.onKillNotificationOptions,
     this.androidFullScreenIntent = true,
     this.allowAlarmOverlap = false,
     this.iOSBackgroundAudio = true,
@@ -139,6 +141,12 @@ class AlarmSettings extends Equatable {
   /// on iOS. Defaults to `true`.
   final bool warningNotificationOnKill;
 
+  /// Options to customize the warning notification shown when the app is killed
+  /// and [warningNotificationOnKill] is true.
+  ///
+  /// If not provided, default title and body text will be used.
+  final OnKillNotificationOptions? onKillNotificationOptions;
+
   /// Whether to turn screen on and display full screen notification
   /// when android alarm notification is triggered. Enabled by default.
   ///
@@ -188,6 +196,8 @@ class AlarmSettings extends Equatable {
         androidFullScreenIntent: androidFullScreenIntent,
         allowAlarmOverlap: allowAlarmOverlap,
         iOSBackgroundAudio: iOSBackgroundAudio,
+        onKillNotificationTitle: onKillNotificationOptions?.title,
+        onKillNotificationBody: onKillNotificationOptions?.body,
       );
 
   /// Creates a copy of `AlarmSettings` but with the given fields replaced with
@@ -200,14 +210,8 @@ class AlarmSettings extends Equatable {
     NotificationSettings? notificationSettings,
     bool? loopAudio,
     bool? vibrate,
-    double? volume,
-    bool? volumeEnforced,
-    double? fadeDuration,
-    List<double>? fadeStopTimes,
-    List<double>? fadeStopVolumes,
-    String? notificationTitle,
-    String? notificationBody,
     bool? warningNotificationOnKill,
+    OnKillNotificationOptions? onKillNotificationOptions,
     bool? androidFullScreenIntent,
     bool? allowAlarmOverlap,
     bool? iOSBackgroundAudio,
@@ -223,6 +227,8 @@ class AlarmSettings extends Equatable {
       vibrate: vibrate ?? this.vibrate,
       warningNotificationOnKill:
           warningNotificationOnKill ?? this.warningNotificationOnKill,
+      onKillNotificationOptions:
+          onKillNotificationOptions ?? this.onKillNotificationOptions,
       androidFullScreenIntent:
           androidFullScreenIntent ?? this.androidFullScreenIntent,
       allowAlarmOverlap: allowAlarmOverlap ?? this.allowAlarmOverlap,
@@ -241,6 +247,7 @@ class AlarmSettings extends Equatable {
         loopAudio,
         vibrate,
         warningNotificationOnKill,
+        onKillNotificationOptions,
         androidFullScreenIntent,
         allowAlarmOverlap,
         iOSBackgroundAudio,

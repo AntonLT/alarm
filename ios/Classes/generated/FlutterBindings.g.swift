@@ -97,6 +97,8 @@ struct AlarmSettingsWire {
   var androidFullScreenIntent: Bool
   var allowAlarmOverlap: Bool
   var iOSBackgroundAudio: Bool
+  var onKillNotificationTitle: String? = nil
+  var onKillNotificationBody: String? = nil
 
 
   // swift-format-ignore: AlwaysUseLowerCamelCase
@@ -112,6 +114,8 @@ struct AlarmSettingsWire {
     let androidFullScreenIntent = pigeonVar_list[8] as! Bool
     let allowAlarmOverlap = pigeonVar_list[9] as! Bool
     let iOSBackgroundAudio = pigeonVar_list[10] as! Bool
+    let onKillNotificationTitle: String? = nilOrValue(pigeonVar_list[11])
+    let onKillNotificationBody: String? = nilOrValue(pigeonVar_list[12])
 
     return AlarmSettingsWire(
       id: id,
@@ -124,7 +128,9 @@ struct AlarmSettingsWire {
       warningNotificationOnKill: warningNotificationOnKill,
       androidFullScreenIntent: androidFullScreenIntent,
       allowAlarmOverlap: allowAlarmOverlap,
-      iOSBackgroundAudio: iOSBackgroundAudio
+      iOSBackgroundAudio: iOSBackgroundAudio,
+      onKillNotificationTitle: onKillNotificationTitle,
+      onKillNotificationBody: onKillNotificationBody
     )
   }
   func toList() -> [Any?] {
@@ -140,6 +146,8 @@ struct AlarmSettingsWire {
       androidFullScreenIntent,
       allowAlarmOverlap,
       iOSBackgroundAudio,
+      onKillNotificationTitle,
+      onKillNotificationBody,
     ]
   }
 }

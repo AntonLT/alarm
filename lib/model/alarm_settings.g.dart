@@ -24,6 +24,12 @@ AlarmSettings _$AlarmSettingsFromJson(Map<String, dynamic> json) =>
           vibrate: $checkedConvert('vibrate', (v) => v as bool? ?? true),
           warningNotificationOnKill: $checkedConvert(
               'warningNotificationOnKill', (v) => v as bool? ?? true),
+          onKillNotificationOptions: $checkedConvert(
+              'onKillNotificationOptions',
+              (v) => v == null
+                  ? null
+                  : OnKillNotificationOptions.fromJson(
+                      v as Map<String, dynamic>)),
           androidFullScreenIntent: $checkedConvert(
               'androidFullScreenIntent', (v) => v as bool? ?? true),
           allowAlarmOverlap:
@@ -46,6 +52,8 @@ Map<String, dynamic> _$AlarmSettingsToJson(AlarmSettings instance) =>
       'loopAudio': instance.loopAudio,
       'vibrate': instance.vibrate,
       'warningNotificationOnKill': instance.warningNotificationOnKill,
+      if (instance.onKillNotificationOptions?.toJson() case final value?)
+        'onKillNotificationOptions': value,
       'androidFullScreenIntent': instance.androidFullScreenIntent,
       'allowAlarmOverlap': instance.allowAlarmOverlap,
       'iOSBackgroundAudio': instance.iOSBackgroundAudio,

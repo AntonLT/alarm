@@ -4,6 +4,7 @@
 import 'dart:async';
 
 import 'package:alarm/model/alarm_settings.dart';
+import 'package:alarm/model/on_kill_notification_options.dart';
 import 'package:alarm/service/alarm_storage.dart';
 import 'package:alarm/src/alarm_trigger_api_impl.dart';
 import 'package:alarm/src/android_alarm.dart';
@@ -18,6 +19,7 @@ import 'package:rxdart/rxdart.dart';
 
 export 'package:alarm/model/alarm_settings.dart';
 export 'package:alarm/model/notification_settings.dart';
+export 'package:alarm/model/on_kill_notification_options.dart';
 
 /// Class that handles the alarm.
 class Alarm {
@@ -94,17 +96,19 @@ class Alarm {
     final alarms = await getAlarms();
 
     for (final alarm in alarms) {
-      if (alarm.id == alarmSettings.id ||
-          alarm.dateTime.isSameSecond(alarmSettings.dateTime)) {
+      if (alarm.id == alarmSettings.id || alarm.dateTime.isSameSecond(alarmSettings.dateTime)) {
         await Alarm.stop(alarm.id);
       }
     }
 
     await AlarmStorage.saveAlarm(alarmSettings);
 
-    final success = iOS
-        ? await IOSAlarm.setAlarm(alarmSettings)
-        : await AndroidAlarm.set(alarmSettings);
+    // Apply onKillNotificationOptions if provided
+    if (alarmSettings.warningNotificationOnKill && alarmSettings.onKillNotificationOptions != null) {
+      await setWarningNotificationOnKill(alarmSettings.onKillNotificationOptions!);
+    }
+
+    final success = iOS ? await IOSAlarm.setAlarm(alarmSettings) : await AndroidAlarm.set(alarmSettings);
 
     if (success) {
       _scheduled.add(_scheduled.value.add(alarmSettings));
@@ -126,16 +130,14 @@ class Alarm {
     if (alarmSettings.id > 2147483647) {
       throw AlarmException(
         AlarmErrorCode.invalidArguments,
-        message:
-            'Alarm id cannot be set larger than Int max value (2147483647). '
+        message: 'Alarm id cannot be set larger than Int max value (2147483647). '
             'Provided: ${alarmSettings.id}',
       );
     }
     if (alarmSettings.id < -2147483648) {
       throw AlarmException(
         AlarmErrorCode.invalidArguments,
-        message:
-            'Alarm id cannot be set smaller than Int min value (-2147483648). '
+        message: 'Alarm id cannot be set smaller than Int min value (-2147483648). '
             'Provided: ${alarmSettings.id}',
       );
     }
@@ -146,11 +148,25 @@ class Alarm {
   /// is shown at the moment he kills the app.
   /// This methods allows you to customize this notification content.
   ///
-  /// [title] default value is `Your alarm may not ring`
-  ///
-  /// [body] default value is `You killed the app.
-  /// Please reopen so your alarm can ring.`
+  /// [options] contains the title and body for the notification:
+  /// - Default title is "Your alarm may not ring"
+  /// - Default body is "You killed the app. Please reopen so your alarm can ring."
   static Future<void> setWarningNotificationOnKill(
+    OnKillNotificationOptions options,
+  ) async {
+    if (iOS) await IOSAlarm.setWarningNotificationOnKill(options.title, options.body);
+    if (android)
+      await AndroidAlarm.setWarningNotificationOnKill(
+        options.title,
+        options.body,
+      );
+  }
+
+  /// Sets warning notification on kill with separate title and body parameters.
+  ///
+  /// This is a convenience method that creates an OnKillNotificationOptions object.
+  /// @deprecated Use [setWarningNotificationOnKill] with [OnKillNotificationOptions] instead.
+  static Future<void> setWarningNotificationOnKillWithStrings(
     String title,
     String body,
   ) async {
@@ -163,8 +179,7 @@ class Alarm {
     await AlarmStorage.unsaveAlarm(id);
     updateStream.add(id);
 
-    final success =
-        iOS ? await IOSAlarm.stopAlarm(id) : await AndroidAlarm.stop(id);
+    final success = iOS ? await IOSAlarm.stopAlarm(id) : await AndroidAlarm.stop(id);
 
     if (success) {
       _scheduled.add(_scheduled.value.removeById(id));
@@ -196,8 +211,7 @@ class Alarm {
   /// If an `id` is provided, it checks if the specific alarm with that `id`
   /// is ringing.
   static Future<bool> isRinging([int? id]) async {
-    final isRinging =
-        iOS ? await IOSAlarm.isRinging(id) : await AndroidAlarm.isRinging(id);
+    final isRinging = iOS ? await IOSAlarm.isRinging(id) : await AndroidAlarm.isRinging(id);
 
     // Defensive programming: check if the stream status matches the platform
     // reported status.
@@ -239,8 +253,7 @@ class Alarm {
   }
 
   /// Returns all the alarms.
-  static Future<List<AlarmSettings>> getAlarms() =>
-      AlarmStorage.getSavedAlarms();
+  static Future<List<AlarmSettings>> getAlarms() => AlarmStorage.getSavedAlarms();
 
   static void _alarmRang(AlarmSettings alarm) {
     _scheduled.add(_scheduled.value.remove(alarm));
